@@ -1,0 +1,147 @@
+\chapter{Программный код}
+
+Для реализации программы был выбран язык Python. % :(
+
+На листинге \ref{lst:dst} представлен программный код абстрактного класса Distribution.
+
+\begin{lstlisting}[language=Python,
+				   frame= tb,
+				   numbers=left,
+				   numberstyle=\footnotesize,
+				   caption={Абстрактный класс Distribution},
+				   label={lst:dst}]
+from abc import ABCMeta, abstractmethod
+
+class AbstractDistribution(object):
+	__metaclass__ = ABCMeta
+
+	@abstractmethod
+	def CDF(self, x):
+		pass
+
+	@abstractmethod
+	def PDF(self, x):
+		pass
+\end{lstlisting}
+
+На листинге \ref{lst:norm} представлен программный код класса Gaussian (нормальное распределение), реализующий абстрактный класс Distribution.
+
+\begin{lstlisting}[language=Python,
+				   frame= tb,
+				   numbers=left,
+				   numberstyle=\footnotesize,
+				   caption={Класс Gaussian},
+				   label={lst:norm}]
+from probability.distribution.distribution import AbstractDistribution
+
+import math
+from scipy import special
+
+
+class Gaussian(AbstractDistribution):
+	__slots__ = ["mean",
+				 "deviation",
+				 "variance"]
+
+	def __init__(self, mean, variance):
+		if variance <= 0.0:
+			raise ValueError("Variance can't non-positive")
+
+		self.mean = mean
+		self.variance = variance
+		self.deviation = math.sqrt(variance)
+
+	def CDF(self, x) -> float:
+		return 0.5 * special.erfc(-(x-self.mean)/(self.deviation*math.sqrt(2)))
+
+	def PDF(self, x) -> float:
+		m = self.deviation * math.sqrt(2*math.pi)
+		e = math.exp(-math.pow(x-self.mean, 2) / (2 * self.variance))
+		return e / m
+\end{lstlisting}
+
+На листинге \ref{lst:uniform} представлен программный код класса Uniform (равномерное распределение), реализующий абстрактный класс Distribution.
+
+\begin{lstlisting}[language=Python,
+	frame= tb,
+	numbers=left,
+	numberstyle=\footnotesize,
+	caption={Класс Uniform},
+	label={lst:uniform}]
+from probability.distribution.distribution import AbstractDistribution
+	
+class Uniform(AbstractDistribution):
+	__slots__ = ["min",
+				 "max"]
+
+	def __init__(self, min, max):
+		self.min = min
+		self.max = max
+
+
+	def CDF(self, x) -> float:
+		if x < self.min:
+			return 0
+		if x > self.max:
+			return 1
+
+	return (x - self.min) / (self.max - self.min)
+
+	def PDF(self, x) -> float:
+		if x < self.min:
+			return 0
+		if x > self.max:
+			return 0
+
+		return 1 / (self.max - self.min)
+\end{lstlisting}
+
+При запуске приложения на координатных плоскостях изображены графики со следующими параметрами: нормальное распределение -- коэффициенты стандартного нормального распределения ($\mu = 0.0, \; \sigma^2 = 1.0$), равномерное распределение -- $a=-2.0,\; b=2.0$. На листинге \ref{lst:gui} представлена часть программного кода построения графиков с коэффициентами по умолчанию. 
+
+\begin{lstlisting}[language=Python,
+	frame= tb,
+	numbers=left,
+	numberstyle=\footnotesize,
+	caption={Часть программного кода построения графиков},
+	label={lst:gui}]
+
+figCDFGaussian = Figure(figsize=(5, 4), dpi=100)
+figPDFGaussian = Figure(figsize=(5, 4), dpi=100)
+
+figCDFUniform = Figure(figsize=(5, 4), dpi=100)
+figPDFUniform = Figure(figsize=(5, 4), dpi=100)
+
+xs = np.arange(-5, 5, .1)
+
+u = Uniform(-2, 2)
+ysPDFUniform = []
+ysCDFUniform = []
+
+g = Gaussian(0, 1)
+ysPDFGaussian = []
+ysCDFGaussian = []
+
+for x in xs:
+	ysPDFGaussian.append(g.PDF(x))
+	ysCDFGaussian.append(g.CDF(x))
+
+	ysPDFUniform.append(u.PDF(x))
+	ysCDFUniform.append(u.CDF(x))
+
+axCDFGaussian = figCDFGaussian.add_subplot()
+lineCDFGaussian, = axCDFGaussian.plot(xs, ysCDFGaussian,
+										 color='xkcd:mauve')
+
+axPDFGaussian = figPDFGaussian.add_subplot()
+linePDFGaussian, = axPDFGaussian.plot(xs, ysPDFGaussian,
+									  color='xkcd:avocado')
+
+canvasPDFGaussian = FigureCanvasTkAgg(figPDFGaussian,
+									  master=root)
+canvasPDFGaussian.draw()
+
+canvasCDFGaussian = FigureCanvasTkAgg(figCDFGaussian,
+									  master=root)
+canvasCDFGaussian.draw()
+	
+\end{lstlisting}
