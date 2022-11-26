@@ -1,0 +1,91 @@
+\chapter{Программный код}
+
+Для реализации программы был выбран язык Python. % :(
+
+
+\noindentНа листинге \ref{lst:cong} представлена реализация линейного конгруэнтного метода.
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize,
+    caption={Релаизация линейного конгруэнтного метода},
+    label={lst:cong}]
+class Congruential():
+    def __init__(self):
+        self.cur = 10
+        self.m = 36261
+        self.a = 66037
+        self.c = 312500
+
+    def Generate(self, lo=0, hi=9, n=500):
+        res = []
+        for i in range(n):
+            self.cur = (self.a * self.cur + self.c) % self.m
+            num = int(lo + self.cur % (hi - lo))
+            res.append(num)
+        return res
+\end{lstlisting}
+На листинге \ref{lst:tab} представлена реализация табличного метода. 
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize,
+    caption={Релаизация табличного метода},
+    label={lst:tab}]
+from pathlib import Path
+
+class BuiltinTable():
+    def __init__(self):
+        self.dataFolder = Path("rand/meta/")
+        self.oneDigitFilename = 'onedigit.txt'
+        self.twoDigitsFilename = 'twodigits.txt'
+        self.threeDigitsFilename =  "threedigits.txt"
+    def Generate(self, digits = 1):
+        if digits == 1:
+            fileToOpen = self.dataFolder / self.oneDigitFilename
+        elif digits == 2:
+            fileToOpen = self.dataFolder / self.twoDigitsFilename
+        else:
+            fileToOpen = self.dataFolder / self.threeDigitsFilename
+        
+        f = open(fileToOpen, 'r')
+
+        nums = []
+        for line in f:
+            nums.append(int(line.strip('\n')))
+            
+        return nums
+\end{lstlisting}
+
+На листинге \ref{lst:cri} представлена реализация собственного критерия проверки случайности.
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize,
+    caption={Реализация собственного критерия проверки случайности},
+    label={lst:cri}]
+def getDeltas(a):
+    deltas = []
+    for i in range(len(a) - 1):
+        deltas.append(abs(a[i + 1] - a[i]))
+    return deltas
+
+def variance(data):
+    n = len(data)
+    mean = sum(data) / n
+    deviations = [(x - mean) ** 2 for x in data]
+    variance = sum(deviations) / n
+
+return variance
+
+def randomnessTest(a):
+    deltas = getDeltas(a)
+    n = len(deltas)
+    sample = 1 / n * sum(deltas)
+
+    if sample == 0:
+    return 0.0
+
+    Vkoef = math.sqrt(variance(deltas)) / sample
+    return Vkoef 
+\end{lstlisting}
