@@ -1,0 +1,144 @@
+\chapter{Программный код}
+
+Для реализации программы был выбран язык Python. % :(
+
+\noindent На листинге \ref{lst:dt} представлена реализация пошагового метода.
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize,
+    caption={Релаизация пошагового метода},
+    label={lst:dt}]
+def TimekeepingSimulation(distribution, jobProcessor, jobsAmount=0, returnPercentage=0, step=0.001):
+    processedJobs = 0
+    currentTime = step
+    generationTime = distribution.GetRandomValue()
+    processTime = 0
+    currentQueueLen = maxQueueLen = 0
+    generatedJobs = 0
+    returnedJobs = 0
+
+    while processedJobs < jobsAmount + returnedJobs:
+
+        if currentTime > generationTime and generatedJobs <= jobsAmount:
+            currentQueueLen += 1
+            generatedJobs += 1
+            if currentQueueLen > maxQueueLen:
+                maxQueueLen = currentQueueLen
+                generationTime += distribution.GetRandomValue()
+        if currentTime > processTime:
+            if currentQueueLen > 0:
+            processedJobs += 1
+
+            if random.randint(1, 100) <= returnPercentage:
+                returnedJobs += 1
+                currentQueueLen += 1
+
+            currentQueueLen -= 1
+            processTime += jobProcessor.GetRandomValue()
+        currentTime += step
+    return maxQueueLen, processedJobs, returnedJobs
+\end{lstlisting}
+На листинге \ref{lst:ev} представлена реализация событийного метода. 
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize,
+    caption={Релаизация событийного метода},
+    label={lst:ev}]
+def EventSimulation(distribution, jobProcessor, jobsAmount=0, returnPercentage=0):
+    processedJobs = 0
+    currentQueueLen = 0
+    maxQueueLen = 0
+
+    jobs = [[distribution.GetRandomValue(), 'g']]
+
+    free, isProcessed = True, False
+
+    generatedJobs = 0
+    returnedJobs = 0
+
+    while processedJobs < jobsAmount + returnedJobs:
+
+        job = jobs.pop(0)
+
+        if job[1] == 'g' and generatedJobs <= jobsAmount:
+
+            currentQueueLen += 1
+            generatedJobs += 1
+
+            if currentQueueLen > maxQueueLen:
+                maxQueueLen = currentQueueLen
+
+            enqueueJob(jobs, [job[0] + distribution.GetRandomValue(), 'g'])
+
+            if free:
+                isProcessed = True
+
+        elif job[1] == 'p':
+
+            processedJobs += 1
+
+            if random.randint(1, 100) <= returnPercentage:
+                returnedJobs += 1
+                currentQueueLen += 1
+
+            isProcessed = True
+
+        if isProcessed:
+
+            if currentQueueLen > 0:
+                currentQueueLen -= 1
+                t = jobProcessor.GetRandomValue()
+                enqueueJob(jobs, [job[0] + t, 'p'])
+                free = False
+            else:
+                free = True
+            isProcessed = False
+
+    return maxQueueLen, processedJobs, returnedJobs
+\end{lstlisting}
+
+На листинге \ref{lst:enc} представлена функция помещения заявки в буфер.
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize,
+    caption={Вспомогательная функция помещения заявки в буфер},
+    label={lst:enc}]
+def enqueueJob(jobs, job):
+    i = 0
+    while i < len(jobs) and jobs[i][0] < job[0]:
+        i += 1
+    if 0 < i < len(jobs):
+        jobs.insert(i - 1, job)
+    else:
+        jobs.insert(i, job)
+\end{lstlisting}
+
+
+На листинге \ref{lst:dist} представлены функции распределений: равномерного и нормального.
+
+\newpage
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize,
+    caption={Функции распределений},
+    label={lst:dist}]
+class UniformDistributon:
+    def __init__(self, lo: float, hi: float):
+        self.lo = lo
+        self.hi = hi
+    
+def GetRandomValue(self):
+    return self.lo + (self.hi - self.lo) * random.random()
+
+    class GaussianDistributon:
+    def __init__(self, mu: float, sigma: float):
+        self.mu = mu
+        self.sigma = sigma
+    
+    def GetRandomValue(self):
+        return normal(self.mu, self.sigma)
+\end{lstlisting}

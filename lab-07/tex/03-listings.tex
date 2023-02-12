@@ -1,0 +1,26 @@
+\chapter{Программный код}
+
+\begin{lstlisting}[language=Python,
+    frame= tb,
+    numbers=left,
+    numberstyle=\footnotesize]
+GENERATE ( uniform (1 ,1 ,10) )
+reenter   QUEUE qDevice
+		  SEIZE device
+		  DEPART qDevice
+		  ADVANCE ( Normal(1,1,0.2))
+
+processed RELEASE device
+		  TRANSFER 200,goback,out
+
+goback   SAVEVALUE NUMOFRETURNED,N$goback
+		 TRANSFER,reenter
+
+out   SAVEVALUE NUMOFRETURNED,N$goback
+	  SAVEVALUE NUMPROCESSED,N$processed
+	  SAVEVALUE NUMREQUESTSEXIT,N$out
+	  SAVEVALUE MAXQUEUELEN,QM$qDevice
+	  TERMINATE 1
+
+	  START 1000
+\end{lstlisting}
